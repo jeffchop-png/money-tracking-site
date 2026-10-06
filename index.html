@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f0">
+  <title>Morg Money</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f5f0;
+      --white: #fff;
+      --ink: #202520;
+      --muted: #777e74;
+      --line: #e7e9e3;
+      --green: #d6f36a;
+      --green-deep: #27331c;
+      --coral: #e5755e;
+      --coral-pale: #fff0ec;
+      --sans: "DM Sans", sans-serif;
+      --display: "Space Grotesk", sans-serif;
+      --sidebar: 252px;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      background-color: var(--paper);
+      background-image: radial-gradient(#dce0d7 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .shell { min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 3;
+      display: flex;
+      width: var(--sidebar);
+      flex-direction: column;
+      padding: 27px 18px 20px;
+      background: #fff;
+      border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 9px 35px; }
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--green);
+      color: var(--green-deep);
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .brand-name { font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: 0; }
+    .nav-label, .eyebrow {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .nav-label { padding: 0 11px 11px; }
+    .section-nav { display: grid; gap: 3px; }
+    .section-link {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #61685e;
+      cursor: pointer;
+      text-align: left;
+      transition: background 140ms ease, color 140ms ease;
+    }
+    .section-link:hover { background: #f4f5f0; color: var(--ink); }
+    .section-link[aria-current="page"] { background: var(--green); color: var(--green-deep); font-weight: 700; }
+    .section-link .section-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .section-count { flex: none; color: #899082; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .section-link[aria-current="page"] .section-count { color: #4e5c31; }
+    .sidebar-bottom { margin-top: auto; padding: 15px 10px 0; border-top: 1px solid var(--line); }
+    .save-indicator { display: flex; align-items: center; gap: 8px; color: #72796f; font-size: 12px; }
+    .save-dot { width: 7px; height: 7px; border-radius: 50%; background: #73a866; }
+    .save-note { margin: 8px 0 0 15px; color: #9a9f97; font-size: 11px; }
+    .main { min-height: 100vh; margin-left: var(--sidebar); }
+    .topbar {
+      display: flex;
+      min-height: 72px;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 11px;
+      padding: 12px 4.2vw;
+      border-bottom: 1px solid rgba(220, 224, 215, 0.8);
+    }
+    .access-state { margin-right: auto; color: var(--muted); font-size: 12px; }
+    .access-state strong { color: var(--ink); font-weight: 600; }
+    .button {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid #dfe2db;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+    .button:hover { transform: translateY(-1px); border-color: #c8cdc1; }
+    .button-primary { border-color: var(--green); background: var(--green); color: var(--green-deep); }
+    .button-primary:hover { border-color: #c4e05b; background: #cfe95d; }
+    .button-danger { border-color: transparent; background: transparent; color: #ad6353; }
+    .button-danger:hover { border-color: #f2d6d0; background: var(--coral-pale); }
+    .button:focus-visible, .section-link:focus-visible, input:focus-visible, textarea:focus-visible, dialog button:focus-visible {
+      outline: 3px solid rgba(94, 131, 49, 0.4);
+      outline-offset: 2px;
+    }
+    .page { width: min(1200px, 100%); margin: 0 auto; padding: clamp(28px, 4.2vw, 58px) 4.2vw 56px; }
+    .heading-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+    .eyebrow { margin: 0 0 9px; }
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 0; font-family: var(--display); font-size: clamp(28px, 3.2vw, 39px); font-weight: 600; letter-spacing: 0; line-height: 1.12; }
+    .section-title-input {
+      width: min(400px, 100%);
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+    }
+    .section-title-input:focus { border-bottom-color: #94a46b; outline: 0; }
+    .heading-actions { display: flex; flex: none; align-items: center; gap: 9px; }
+    .summary-grid { display: grid; grid-template-columns: minmax(170px, 0.75fr) minmax(0, 2fr); gap: 14px; margin: 29px 0 30px; }
+    .summary-tile { min-height: 111px; padding: 17px 19px; border: 1px solid #e5e7e0; border-radius: 8px; background: #fff; }
+    .tile-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .tile-value { display: block; font-family: var(--display); font-size: 26px; font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; line-height: 1.15; }
+    .balance-values { display: flex; flex-wrap: wrap; align-items: baseline; gap: 9px 22px; }
+    .balance-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; font-family: var(--display); font-size: 19px; font-variant-numeric: tabular-nums; }
+    .balance-item small { color: var(--muted); font-family: var(--sans); font-size: 10px; font-weight: 700; }
+    .balance-empty { color: #a1a69d; font-size: 13px; }
+    .ledger-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .ledger-head h2 { margin: 0; font-family: var(--display); font-size: 15px; font-weight: 600; }
+    .ledger-tools { display: flex; align-items: center; gap: 9px; }
+    .search-box { width: min(220px, 39vw); height: 36px; padding: 0 11px; border: 1px solid #e0e3dc; border-radius: 6px; background: #fff; color: var(--ink); font-size: 12px; }
+    .search-box::placeholder { color: #a1a69d; }
+    .table-wrap { overflow-x: auto; border: 1px solid #e4e6df; border-radius: 8px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { height: 41px; padding: 0 18px; border-bottom: 1px solid var(--line); background: #fafbf8; color: #848a80; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    td { height: 59px; padding: 8px 18px; border-bottom: 1px solid #eff0ec; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .person-name { min-width: 150px; font-weight: 600; }
+    .section-cell { color: #72796f; font-size: 12px; }
+    .amount-cell { width: 28%; font-family: var(--display); font-variant-numeric: tabular-nums; }
+    .currency-cell { width: 20%; color: #666d62; font-size: 12px; font-weight: 600; }
+    .actions-cell { width: 1%; text-align: right; white-space: nowrap; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .cell-input { width: min(100%, 235px); min-height: 35px; padding: 6px 9px; border: 1px solid #dfe2db; border-radius: 5px; background: #fff; color: var(--ink); }
+    .amount-input { width: min(100%, 165px); font-family: var(--display); font-variant-numeric: tabular-nums; }
+    .currency-input { width: 75px; text-transform: uppercase; }
+    .remove-button { min-width: 31px; min-height: 31px; padding: 0 9px; }
+    .empty-row { padding: 44px 18px; color: #7b8277; text-align: center; }
+    .empty-row strong { display: block; margin-bottom: 6px; color: #394036; font-family: var(--display); font-size: 14px; }
+    .empty-row span { font-size: 12px; }
+    .table-foot { display: flex; justify-content: space-between; gap: 12px; padding: 13px 2px; color: #888e84; font-size: 11px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 6; max-width: min(360px, calc(100vw - 44px)); padding: 12px 16px; transform: translateY(12px); border: 1px solid #dfe2db; border-radius: 7px; background: white; box-shadow: 0 6px 24px #27331c18; opacity: 0; pointer-events: none; transition: opacity 170ms ease, transform 170ms ease; font-size: 12px; }
+    .toast.visible { transform: translateY(0); opacity: 1; }
+    dialog { width: min(410px, calc(100vw - 36px)); padding: 26px; border: 1px solid #e3e6de; border-radius: 9px; background: white; color: var(--ink); box-shadow: 0 22px 80px #20252030; }
+    dialog::backdrop { background: #20252075; backdrop-filter: blur(2px); }
+    dialog h2 { margin-bottom: 7px; font-family: var(--display); font-size: 21px; }
+    dialog p { margin-bottom: 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .password-input { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #dfe2db; border-radius: 6px; }
+    .bulk-paste-input { width: 100%; min-height: 190px; padding: 10px 12px; border: 1px solid #dfe2db; border-radius: 6px; resize: vertical; font: inherit; font-size: 12px; line-height: 1.6; }
+    .dialog-error { min-height: 18px; margin: 7px 0 10px; color: #b65343; font-size: 11px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    @media (max-width: 760px) {
+      :root { --sidebar: 0px; }
+      .sidebar { position: sticky; inset: 0 0 auto; width: 100%; padding: 13px 16px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { padding: 0 2px 12px; }
+      .brand-mark { width: 32px; height: 32px; }
+      .nav-label, .sidebar-bottom { display: none; }
+      .section-nav { display: flex; overflow-x: auto; gap: 5px; padding-bottom: 10px; scrollbar-width: thin; }
+      .section-link { min-height: 34px; flex: none; gap: 8px; padding: 0 10px; font-size: 11px; }
+      .main { margin-left: 0; }
+      .topbar { min-height: 58px; padding: 9px 18px; }
+      .page { padding: 28px 18px 42px; }
+    }
+    @media (max-width: 500px) {
+      .heading-row { align-items: flex-start; flex-direction: column; gap: 16px; }
+      .heading-actions { width: 100%; }
+      .heading-actions .button { flex: 1; }
+      .summary-grid { grid-template-columns: 1fr; gap: 9px; margin: 23px 0; }
+      .summary-tile { min-height: 88px; padding: 14px 16px; }
+      .tile-value { font-size: 23px; }
+      .ledger-head { align-items: flex-start; flex-direction: column; gap: 11px; }
+      .ledger-tools { width: 100%; }
+      .search-box { width: 100%; }
+      th { padding: 0 12px; }
+      td { padding: 8px 12px; }
+      .person-name { min-width: 130px; }
+      .table-foot { flex-direction: column; gap: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span class="brand-name">Morg Money</span></div>
+      <div class="nav-label">Your sections</div>
+      <nav class="section-nav" id="sectionNav" aria-label="Money sections"></nav>
+      <div class="sidebar-bottom">
+        <div class="save-indicator"><span class="save-dot" aria-hidden="true"></span><span>Shared across this site</span></div>
+        <p class="save-note">Changes are saved on the shared server.</p>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="access-state" id="accessState" aria-live="polite"></div>
+        <button class="button" id="syncButton" type="button" hidden>Sync now</button>
+        <button class="button button-danger" id="discardDraftButton" type="button" hidden>Use shared version</button>
+        <button class="button" id="lockButton" type="button"></button>
+      </header>
+      <section class="page" aria-labelledby="pageTitle">
+        <div class="heading-row">
+          <div>
+            <p class="eyebrow">Morg Money / <span id="sectionBreadcrumb"></span></p>
+            <h1 id="pageTitle"></h1>
+          </div>
+          <div class="heading-actions">
+            <button class="button" id="bulkAddButton" type="button">Paste list</button>
+            <button class="button button-primary" id="addButton" type="button">+ Add person</button>
+          </div>
+        </div>
+        <div class="summary-grid" id="sectionSummary" aria-label="Section summary">
+          <article class="summary-tile"><span class="tile-label">People in this section</span><strong class="tile-value" id="peopleCount">0</strong></article>
+          <article class="summary-tile"><span class="tile-label">Balances by currency</span><div class="balance-values" id="balanceValues"></div></article>
+        </div>
+        <div class="ledger-head">
+          <h2>People &amp; balances</h2>
+          <div class="ledger-tools"><input class="search-box" id="searchInput" type="search" placeholder="Search all people..." aria-label="Search all people across sections"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Person</th><th scope="col" id="sectionColumnHeader" hidden>Section</th><th scope="col">Balance</th><th scope="col">Currency</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody id="peopleTable"></tbody>
+          </table>
+        </div>
+        <div class="table-foot"><span id="tableCount"></span><span>Balances are grouped by currency.</span></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="unlockDialog" aria-labelledby="dialogTitle">
+    <form id="unlockForm">
+      <h2 id="dialogTitle">Unlock editing</h2>
+      <p>Enter the key to add, remove, or change people, balances, and section names.</p>
+      <label class="eyebrow" for="passwordInput">Access key</label>
+      <input class="password-input" id="passwordInput" type="password" autocomplete="current-password" required>
+      <div class="dialog-error" id="dialogError" role="alert"></div>
+      <div class="dialog-actions"><button class="button" id="cancelUnlock" type="button">Cancel</button><button class="button button-primary" type="submit">Unlock</button></div>
+    </form>
+  </dialog>
+  <dialog id="bulkPasteDialog" aria-labelledby="bulkPasteTitle">
+    <form id="bulkPasteForm">
+      <h2 id="bulkPasteTitle">Paste people and balances</h2>
+      <p>Paste one person per line, for example <strong>Jane Smith&nbsp;&nbsp; $125.00</strong>. Spreadsheet rows with a name in one column and amount in the next also work.</p>
+      <label class="eyebrow" for="bulkPasteInput">Names and dollar amounts</label>
+      <textarea class="bulk-paste-input" id="bulkPasteInput" rows="8" placeholder="Jane Smith&#9;$125.00&#10;Alex Lee&#9;$80" required></textarea>
+      <div class="dialog-error" id="bulkPasteError" role="alert"></div>
+      <div class="dialog-actions"><button class="button" id="cancelBulkPaste" type="button">Cancel</button><button class="button button-primary" type="submit">Add people</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      const LEGACY_STORAGE_KEY = "morg-money-v1";
+      const OFFLINE_DB_NAME = "morg-money-offline";
+      const OFFLINE_STORE_NAME = "snapshots";
+      const OFFLINE_RECORD_KEY = "shared-ledger";
+      const SESSION_STORAGE_KEY = "morg-money-edit-session";
+      const DEFAULT_SECTIONS = Array.from({ length: 6 }, (_, index) => ({ id: `section-${index + 1}`, name: `Section ${String(index + 1).padStart(2, "0")}`, people: [] }));
+      const elements = {
+        nav: document.getElementById("sectionNav"),
+        breadcrumb: document.getElementById("sectionBreadcrumb"),
+        title: document.getElementById("pageTitle"),
+        accessState: document.getElementById("accessState"),
+        syncButton: document.getElementById("syncButton"),
+        discardDraftButton: document.getElementById("discardDraftButton"),
+        lockButton: document.getElementById("lockButton"),
+        addButton: document.getElementById("addButton"),
+        bulkAddButton: document.getElementById("bulkAddButton"),
+        bulkPasteDialog: document.getElementById("bulkPasteDialog"),
+        bulkPasteForm: document.getElementById("bulkPasteForm"),
+        bulkPasteInput: document.getElementById("bulkPasteInput"),
+        bulkPasteError: document.getElementById("bulkPasteError"),
+        cancelBulkPaste: document.getElementById("cancelBulkPaste"),
+        peopleCount: document.getElementById("peopleCount"),
+        summary: document.getElementById("sectionSummary"),
+        balanceValues: document.getElementById("balanceValues"),
+        search: document.getElementById("searchInput"),
+        sectionColumn: document.getElementById("sectionColumnHeader"),
+        peopleHeading: document.querySelector(".ledger-head h2"),
+        table: document.getElementById("peopleTable"),
+        tableCount: document.getElementById("tableCount"),
+        dialog: document.getElementById("unlockDialog"),
+        unlockForm: document.getElementById("unlockForm"),
+        password: document.getElementById("passwordInput"),
+        dialogError: document.getElementById("dialogError"),
+        cancelUnlock: document.getElementById("cancelUnlock"),
+        toast: document.getElementById("toast")
+      };
+      let sections = DEFAULT_SECTIONS;
+      let activeSectionId = sections[0].id;
+      let unlocked = false;
+      let sessionToken = "";
+      let sessionExpiresAt = 0;
+      let sessionExpiryTimer;
+      let revision = 0;
+      let isLoading = true;
+      let connectionError = false;
+      let hasOfflineCopy = false;
+      let hasUnsavedChanges = false;
+      let pendingBaseRevision = null;
+      let syncConflict = false;
+      let syncInProgress = false;
+      let saveQueue = Promise.resolve();
+      let localWriteQueue = Promise.resolve();
+      let saveDebounce;
+      let saveGeneration = 0;
+      let offlineDbPromise;
+      const legacySections = readLegacySections();
+      let toastTimeout;
+
+      function openOfflineDatabase() {
+        if (!window.indexedDB) return Promise.reject(new Error("IndexedDB is not available."));
+        if (!offlineDbPromise) {
+          offlineDbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(OFFLINE_DB_NAME, 1);
+            request.onupgradeneeded = () => request.result.createObjectStore(OFFLINE_STORE_NAME);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+        }
+        return offlineDbPromise;
+      }
+
+      async function readOfflineSnapshot() {
+        try {
+          const database = await openOfflineDatabase();
+          return await new Promise((resolve, reject) => {
+            const transaction = database.transaction(OFFLINE_STORE_NAME, "readonly");
+            const request = transaction.objectStore(OFFLINE_STORE_NAME).get(OFFLINE_RECORD_KEY);
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error);
+          });
+        } catch {
+          try { return JSON.parse(localStorage.getItem(OFFLINE_RECORD_KEY)); } catch { return null; }
+        }
+      }
+
+      async function writeOfflineSnapshot(record) {
+        try {
+          const database = await openOfflineDatabase();
+          await new Promise((resolve, reject) => {
+            const transaction = database.transaction(OFFLINE_STORE_NAME, "readwrite");
+            transaction.objectStore(OFFLINE_STORE_NAME).put(record, OFFLINE_RECORD_KEY);
+            transaction.oncomplete = resolve;
+            transaction.onerror = () => reject(transaction.error);
+            transaction.onabort = () => reject(transaction.error);
+          });
+          return;
+        } catch {
+          try {
+            localStorage.setItem(OFFLINE_RECORD_KEY, JSON.stringify(record));
+          } catch {
+            throw new Error("This browser could not save an offline copy. Free up storage space and try again.");
+          }
+        }
+      }
+
+      function queueOfflineWrite(record) {
+        const task = localWriteQueue.then(() => writeOfflineSnapshot(record));
+        localWriteQueue = task.catch(() => {});
+        return task;
+      }
+
+      function restoreEditingSession() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY));
+          if (saved && typeof saved.token === "string" && saved.expiresAt > Date.now()) {
+            sessionToken = saved.token;
+            unlocked = true;
+            scheduleSessionExpiry(saved.expiresAt);
+          } else {
+            clearTimeout(sessionExpiryTimer);
+            sessionToken = "";
+            unlocked = false;
+            sessionExpiresAt = 0;
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+          }
+        } catch {
+          clearTimeout(sessionExpiryTimer);
+          sessionToken = "";
+          unlocked = false;
+          sessionExpiresAt = 0;
+        }
+      }
+
+      function scheduleSessionExpiry(expiresAt) {
+        clearTimeout(sessionExpiryTimer);
+        sessionExpiresAt = expiresAt;
+        sessionExpiryTimer = setTimeout(() => {
+          sessionToken = "";
+          unlocked = false;
+          sessionExpiresAt = 0;
+          try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+          render();
+          if (hasUnsavedChanges) showToast("Your offline draft is still saved here. Unlock again when the server is available to sync it.");
+        }, Math.max(0, expiresAt - Date.now()));
+      }
+
+      function readLegacySections() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY));
+          return Array.isArray(saved) && (saved.length === 6 || saved.length === 7) ? saved : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function saveSections(nextSections = sections, { preserveFocus = false } = {}) {
+        if (!unlocked) return Promise.resolve({ saved: false });
+        if (!hasUnsavedChanges) pendingBaseRevision = revision;
+        hasUnsavedChanges = true;
+        const isImport = nextSections !== sections;
+        const snapshot = JSON.parse(JSON.stringify(nextSections));
+        const generation = saveGeneration;
+        const durableWrite = queueOfflineWrite({
+          sections: snapshot,
+          revision,
+          baseRevision: pendingBaseRevision,
+          pending: true,
+          conflict: syncConflict,
+          updatedAt: Date.now()
+        });
+        if (syncConflict) {
+          durableWrite.catch(error => showToast(error.message));
+          setAccessView();
+          return durableWrite.then(() => ({ saved: false, conflict: true }));
+        }
+        clearTimeout(saveDebounce);
+        const task = saveQueue.then(async () => {
+          if (generation !== saveGeneration) return { saved: false };
+          try {
+            await durableWrite;
+          } catch (error) {
+            showToast(error.message);
+            return { saved: false };
+          }
+          if (!sessionToken || !navigator.onLine || connectionError) {
+            connectionError = true;
+            updateBackgroundView();
+            return { saved: false, pending: true };
+          }
+          try {
+            const response = await fetch("/api/state", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+              body: JSON.stringify({ revision, sections: snapshot }),
+              signal: AbortSignal.timeout(8000)
+            });
+            const result = await response.json();
+            if (response.status === 409) {
+              syncConflict = true;
+              connectionError = false;
+              const local = await readOfflineSnapshot();
+              if (local) await queueOfflineWrite({ ...local, pending: true, conflict: true });
+              updateBackgroundView();
+              showToast("Your offline changes are saved here, but someone else updated the shared tracker. Download a copy before choosing which version to keep.");
+              return { saved: false, conflict: true };
+            }
+            if (response.status === 401) {
+              unlocked = false;
+              sessionToken = "";
+              clearTimeout(sessionExpiryTimer);
+              sessionExpiresAt = 0;
+              try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+              render();
+              showToast("Your changes are saved on this device. Unlock again to sync them.");
+              return { saved: false };
+            }
+            if (!response.ok) throw new Error(result.error || "Could not save shared changes.");
+            revision = result.revision;
+            connectionError = false;
+            const local = await readOfflineSnapshot();
+            const latestSnapshot = local && JSON.stringify(local.sections) !== JSON.stringify(snapshot);
+            if (latestSnapshot) {
+              pendingBaseRevision = revision;
+              await queueOfflineWrite({ ...local, revision, baseRevision: revision, pending: true });
+            } else {
+              if (isImport) {
+                sections = result.sections;
+                activeSectionId = sections[0].id;
+              }
+              hasUnsavedChanges = false;
+              pendingBaseRevision = null;
+              syncConflict = false;
+              await queueOfflineWrite({ sections: result.sections, revision, baseRevision: revision, pending: false, conflict: false, updatedAt: Date.now() });
+            }
+            if (preserveFocus) updateBackgroundView();
+            else render();
+            return { saved: true };
+          } catch (error) {
+            connectionError = true;
+            updateBackgroundView();
+            showToast("Saved on this device. It will sync when the server is available.");
+            return { saved: false, pending: true };
+          }
+        });
+        saveQueue = task.catch(() => {});
+        return task;
+      }
+
+      function scheduleInputSave() {
+        if (!unlocked) return;
+        if (!hasUnsavedChanges) pendingBaseRevision = revision;
+        hasUnsavedChanges = true;
+        setAccessView();
+        clearTimeout(saveDebounce);
+        saveDebounce = setTimeout(() => saveSections(sections, { preserveFocus: true }), 250);
+      }
+
+      function updateBackgroundView() {
+        if (unlocked && document.activeElement?.closest?.(".page")) {
+          setAccessView();
+        } else {
+          render();
+        }
+      }
+
+      async function loadSharedState() {
+        isLoading = true;
+        connectionError = false;
+        restoreEditingSession();
+        render();
+        let cached = await readOfflineSnapshot();
+        if (cached && Array.isArray(cached.sections) && cached.sections.length === 6) {
+          hasOfflineCopy = true;
+          sections = cached.sections;
+          revision = Number.isSafeInteger(cached.revision) ? cached.revision : 0;
+          hasUnsavedChanges = cached.pending === true;
+          pendingBaseRevision = hasUnsavedChanges && Number.isSafeInteger(cached.baseRevision) ? cached.baseRevision : null;
+          syncConflict = cached.conflict === true;
+          if (!sections.some(section => section.id === activeSectionId)) activeSectionId = sections[0].id;
+          isLoading = false;
+          render();
+        }
+        try {
+          const response = await fetch("/api/state", { signal: AbortSignal.timeout(8000) });
+          if (!response.ok) throw new Error("Could not load shared records.");
+          const result = await response.json();
+          if (!Array.isArray(result.sections) || result.sections.length !== 6) {
+            throw new Error("The server returned invalid shared records.");
+          }
+          connectionError = false;
+          if (cached?.pending) {
+            if (cached.baseRevision === result.revision) {
+              sections = cached.sections;
+              revision = result.revision;
+              pendingBaseRevision = result.revision;
+              syncConflict = false;
+            } else {
+              syncConflict = true;
+              cached = { ...cached, conflict: true };
+              await queueOfflineWrite(cached);
+              showToast("Offline changes are kept on this device. The shared tracker changed while you were away.");
+            }
+          } else {
+            sections = result.sections;
+            revision = result.revision;
+            hasUnsavedChanges = false;
+            pendingBaseRevision = null;
+            syncConflict = false;
+            hasOfflineCopy = true;
+            await queueOfflineWrite({ sections, revision, baseRevision: revision, pending: false, conflict: false, updatedAt: Date.now() });
+          }
+          if (!sections.some(section => section.id === activeSectionId)) activeSectionId = sections[0].id;
+          isLoading = false;
+          render();
+          if (hasUnsavedChanges && !syncConflict && unlocked) syncOfflineDraft();
+        } catch (error) {
+          isLoading = false;
+          connectionError = true;
+          render();
+          if (cached) showToast("Shared server unavailable. Your saved offline copy is ready.");
+          else showToast(error.message || "Could not reach the shared server.");
+        }
+      }
+
+      function syncOfflineDraft() {
+        if (syncInProgress || syncConflict || !unlocked || !sessionToken || !hasUnsavedChanges) return saveQueue;
+        syncInProgress = true;
+        const task = saveQueue.then(async () => {
+          await localWriteQueue;
+          const draft = await readOfflineSnapshot();
+          if (!draft?.pending) return;
+          if (!navigator.onLine) {
+            connectionError = true;
+            updateBackgroundView();
+            return;
+          }
+          const stateResponse = await fetch("/api/state", { signal: AbortSignal.timeout(8000) });
+          if (!stateResponse.ok) throw new Error("Could not check the shared tracker.");
+          const shared = await stateResponse.json();
+          if (shared.revision !== draft.baseRevision) {
+            syncConflict = true;
+            await queueOfflineWrite({ ...draft, conflict: true });
+            updateBackgroundView();
+            showToast("Your offline changes are preserved, but the shared tracker changed too. Download your copy before choosing a version.");
+            return;
+          }
+          const response = await fetch("/api/state", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+            body: JSON.stringify({ revision: shared.revision, sections: draft.sections }),
+            signal: AbortSignal.timeout(8000)
+          });
+          const result = await response.json();
+          if (response.status === 409) {
+            syncConflict = true;
+            await queueOfflineWrite({ ...draft, conflict: true });
+            updateBackgroundView();
+            showToast("Your offline changes are preserved. The shared tracker changed during sync.");
+            return;
+          }
+          if (response.status === 401) {
+            unlocked = false;
+            sessionToken = "";
+            clearTimeout(sessionExpiryTimer);
+            sessionExpiresAt = 0;
+            try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+            render();
+            showToast("Your offline copy is safe. Unlock editing again to sync it.");
+            return;
+          }
+          if (!response.ok) throw new Error(result.error || "Could not sync offline changes.");
+          const latest = await readOfflineSnapshot();
+          revision = result.revision;
+          if (latest && JSON.stringify(latest.sections) !== JSON.stringify(draft.sections)) {
+            pendingBaseRevision = revision;
+            hasUnsavedChanges = true;
+            await queueOfflineWrite({ ...latest, revision, baseRevision: revision, pending: true, conflict: false });
+          } else {
+            sections = result.sections;
+            hasUnsavedChanges = false;
+            pendingBaseRevision = null;
+            syncConflict = false;
+            connectionError = false;
+            await queueOfflineWrite({ sections, revision, baseRevision: revision, pending: false, conflict: false, updatedAt: Date.now() });
+            showToast("Offline changes synced to the shared tracker.");
+          }
+          updateBackgroundView();
+        }).catch(() => {
+          connectionError = true;
+          updateBackgroundView();
+        }).finally(() => {
+          syncInProgress = false;
+        });
+        saveQueue = task.catch(() => {});
+        return task;
+      }
+
+      async function downloadOfflineCopy() {
+        const draft = await readOfflineSnapshot();
+        if (!draft) return;
+        const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "morg-money-offline-copy.json";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+
+      async function useSharedVersion() {
+        if (!navigator.onLine || !window.confirm("Replace this device's offline draft with the shared version? Download a copy first if you may need these offline edits.")) return;
+        try {
+          const response = await fetch("/api/state", { signal: AbortSignal.timeout(8000) });
+          if (!response.ok) throw new Error("Could not load the shared tracker.");
+          const shared = await response.json();
+          sections = shared.sections;
+          revision = shared.revision;
+          hasUnsavedChanges = false;
+          pendingBaseRevision = null;
+          syncConflict = false;
+          connectionError = false;
+          hasOfflineCopy = true;
+          await queueOfflineWrite({ sections, revision, baseRevision: revision, pending: false, conflict: false, updatedAt: Date.now() });
+          render();
+        } catch {
+          showToast("Could not load the shared version. Your offline copy is unchanged.");
+        }
+      }
+
+      async function refreshSharedState() {
+        if (isLoading || document.visibilityState === "hidden") return;
+        const focusedEditor = document.activeElement?.matches?.(".cell-input, .section-title-input");
+        if (unlocked && focusedEditor) return;
+        if (hasUnsavedChanges) {
+          syncOfflineDraft();
+          return;
+        }
+        try {
+          const response = await fetch("/api/state", { signal: AbortSignal.timeout(8000) });
+          if (!response.ok) return;
+          const result = await response.json();
+          if (result.revision === revision || !Array.isArray(result.sections) || result.sections.length !== 6) return;
+          sections = result.sections;
+          revision = result.revision;
+          connectionError = false;
+          hasOfflineCopy = true;
+          if (!sections.some(section => section.id === activeSectionId)) activeSectionId = sections[0].id;
+          await queueOfflineWrite({ sections, revision, baseRevision: revision, pending: false, conflict: false, updatedAt: Date.now() });
+          render();
+        } catch {
+          connectionError = true;
+          render();
+          return;
+        }
+      }
+
+      function currentSection() {
+        return sections.find(section => section.id === activeSectionId) || sections[0];
+      }
+
+      function formatBalance(amount, currency) {
+        try {
+          return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+        } catch {
+          return `${currency} ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(amount)}`;
+        }
+      }
+
+      function setAccessView() {
+        if (isLoading) {
+          elements.accessState.innerHTML = "Connecting to <strong>shared records</strong>";
+        } else if (syncConflict) {
+          elements.accessState.innerHTML = "<strong>Offline copy needs review</strong>";
+        } else if (hasUnsavedChanges) {
+          elements.accessState.innerHTML = "Changes saved <strong>on this device</strong>; waiting to sync";
+        } else if (connectionError) {
+          elements.accessState.innerHTML = "<strong>Working offline</strong>";
+        } else {
+          elements.accessState.innerHTML = unlocked ? "Editing <strong>unlocked</strong>" : "Editing <strong>locked</strong>";
+        }
+        elements.lockButton.textContent = unlocked ? "Lock editing" : connectionError ? "Retry connection" : "Unlock editing";
+        elements.lockButton.disabled = isLoading;
+        elements.lockButton.setAttribute("aria-label", unlocked ? "Lock editing" : connectionError ? "Retry shared server connection" : "Unlock editing with access key");
+        elements.addButton.hidden = isLoading || !unlocked || (connectionError && !hasOfflineCopy);
+        elements.bulkAddButton.hidden = elements.addButton.hidden;
+        elements.syncButton.hidden = !hasUnsavedChanges;
+        elements.syncButton.textContent = syncConflict ? "Download offline copy" : "Sync now";
+        elements.syncButton.disabled = !syncConflict && (!navigator.onLine || syncInProgress || !unlocked);
+        elements.discardDraftButton.hidden = !syncConflict;
+        elements.discardDraftButton.disabled = !navigator.onLine;
+      }
+
+      function render() {
+        const section = currentSection();
+        const query = elements.search.value.trim().toLowerCase();
+        const isSearching = query.length > 0;
+        const visiblePeople = isSearching
+          ? sections.flatMap(item => item.people.filter(person => person.name.toLowerCase().includes(query)).map(person => ({ person, section: item })))
+          : section.people.map(person => ({ person, section }));
+        elements.summary.hidden = isSearching;
+        elements.sectionColumn.hidden = !isSearching;
+        elements.peopleHeading.textContent = isSearching ? "Matching people" : "People & balances";
+        elements.nav.replaceChildren(...sections.map(item => {
+          const button = document.createElement("button");
+          button.className = "section-link";
+          button.type = "button";
+          button.setAttribute("aria-current", item.id === activeSectionId ? "page" : "false");
+          const name = document.createElement("span");
+          name.className = "section-name";
+          name.textContent = item.name;
+          const count = document.createElement("span");
+          count.className = "section-count";
+          count.textContent = item.people.length;
+          button.append(name, count);
+          button.addEventListener("click", () => {
+            activeSectionId = item.id;
+            elements.search.value = "";
+            render();
+          });
+          return button;
+        }));
+
+        elements.breadcrumb.textContent = isSearching ? "All sections" : section.name;
+        if (isSearching) {
+          elements.title.textContent = "Search results";
+        } else if (unlocked) {
+          const titleInput = document.createElement("input");
+          titleInput.className = "section-title-input";
+          titleInput.value = section.name;
+          titleInput.maxLength = 40;
+          titleInput.setAttribute("aria-label", "Change section name");
+          titleInput.addEventListener("input", () => {
+            const nextName = titleInput.value.trim();
+            if (nextName) {
+              section.name = nextName;
+              scheduleInputSave();
+            }
+          });
+          titleInput.addEventListener("change", () => {
+            const nextName = titleInput.value.trim();
+            if (nextName) {
+              section.name = nextName;
+              saveSections();
+              render();
+            } else {
+              titleInput.value = section.name;
+              showToast("A section name cannot be empty.");
+            }
+          });
+          elements.title.replaceChildren(titleInput);
+        } else {
+          elements.title.textContent = section.name;
+        }
+
+        elements.peopleCount.textContent = section.people.length;
+        const totals = section.people.reduce((groups, person) => {
+          const currency = person.currency.toUpperCase();
+          groups.set(currency, (groups.get(currency) || 0) + person.amount);
+          return groups;
+        }, new Map());
+        elements.balanceValues.replaceChildren();
+        if (totals.size === 0) {
+          const empty = document.createElement("span");
+          empty.className = "balance-empty";
+          empty.textContent = "No balances yet";
+          elements.balanceValues.append(empty);
+        } else {
+          for (const [currency, amount] of totals) {
+            const item = document.createElement("span");
+            item.className = "balance-item";
+            item.textContent = formatBalance(amount, currency);
+            const code = document.createElement("small");
+            code.textContent = currency;
+            item.append(code);
+            elements.balanceValues.append(item);
+          }
+        }
+
+        elements.table.replaceChildren();
+        if (visiblePeople.length === 0) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.className = "empty-row";
+          cell.colSpan = 5;
+          const headline = document.createElement("strong");
+          const detail = document.createElement("span");
+          if (isSearching) {
+            headline.textContent = "No matching people";
+            detail.textContent = "Try another name.";
+          } else if (section.people.length === 0) {
+            headline.textContent = unlocked ? "Your first person goes here" : "Nothing on the books yet";
+            detail.textContent = unlocked ? "Add someone to start tracking their balance." : "Unlock editing to add people and start tracking.";
+          } else {
+            headline.textContent = "No matching people";
+            detail.textContent = "Try another name.";
+          }
+          cell.append(headline, detail);
+          row.append(cell);
+          elements.table.append(row);
+        } else {
+          for (const entry of visiblePeople) {
+            elements.table.append(createPersonRow(entry.person, entry.section, isSearching));
+          }
+        }
+        if (isSearching) {
+          const totalPeople = sections.reduce((total, item) => total + item.people.length, 0);
+          elements.tableCount.textContent = `${visiblePeople.length} matching ${visiblePeople.length === 1 ? "person" : "people"} across all sections (${totalPeople} total)`;
+        } else {
+          elements.tableCount.textContent = `${visiblePeople.length} of ${section.people.length} ${section.people.length === 1 ? "person" : "people"}`;
+        }
+        setAccessView();
+      }
+
+      function createPersonRow(person, section, showSection) {
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.className = "person-name";
+        const sectionCell = document.createElement("td");
+        sectionCell.className = "section-cell";
+        sectionCell.textContent = section.name;
+        sectionCell.hidden = !showSection;
+        const amountCell = document.createElement("td");
+        amountCell.className = "amount-cell";
+        const currencyCell = document.createElement("td");
+        currencyCell.className = "currency-cell";
+        const actionsCell = document.createElement("td");
+        actionsCell.className = "actions-cell";
+        if (unlocked) {
+          const nameInput = createInput("text", "cell-input", person.name, "Person name");
+          nameInput.maxLength = 70;
+          nameInput.addEventListener("input", () => {
+            person.name = nameInput.value;
+            scheduleInputSave();
+          });
+          nameInput.addEventListener("change", () => {
+            person.name = nameInput.value.trim() || "Unnamed person";
+            saveSections();
+            render();
+          });
+          const amountInput = createInput("number", "cell-input amount-input", person.amount, "Balance");
+          amountInput.step = "0.01";
+          amountInput.addEventListener("input", () => {
+            if (Number.isFinite(amountInput.valueAsNumber)) {
+              person.amount = Math.round(amountInput.valueAsNumber * 100) / 100;
+              scheduleInputSave();
+            }
+          });
+          amountInput.addEventListener("change", () => {
+            person.amount = Number.isFinite(amountInput.valueAsNumber) ? Math.round(amountInput.valueAsNumber * 100) / 100 : 0;
+            saveSections();
+            render();
+          });
+          const currencyInput = createInput("text", "cell-input currency-input", person.currency, "Currency code");
+          currencyInput.maxLength = 3;
+          currencyInput.minLength = 3;
+          currencyInput.addEventListener("input", () => {
+            const code = currencyInput.value.trim().toUpperCase();
+            if (/^[A-Z]{3}$/.test(code)) {
+              person.currency = code;
+              scheduleInputSave();
+            }
+          });
+          currencyInput.addEventListener("change", () => {
+            const code = currencyInput.value.trim().toUpperCase();
+            if (/^[A-Z]{3}$/.test(code)) {
+              person.currency = code;
+              saveSections();
+              render();
+            } else {
+              currencyInput.value = person.currency;
+              showToast("Enter a three-letter currency code, such as USD.");
+            }
+          });
+          const remove = document.createElement("button");
+          remove.className = "button button-danger remove-button";
+          remove.type = "button";
+          remove.textContent = "Remove";
+          remove.setAttribute("aria-label", `Remove ${person.name || "person"}`);
+          remove.addEventListener("click", () => {
+            section.people = section.people.filter(item => item.id !== person.id);
+            saveSections();
+            render();
+            showToast("Person removed.");
+          });
+          nameCell.append(nameInput);
+          amountCell.append(amountInput);
+          currencyCell.append(currencyInput);
+          actionsCell.append(remove);
+        } else {
+          nameCell.textContent = person.name || "Unnamed person";
+          amountCell.textContent = formatBalance(person.amount, person.currency);
+          currencyCell.textContent = person.currency;
+        }
+        row.append(nameCell, sectionCell, amountCell, currencyCell, actionsCell);
+        return row;
+      }
+
+      function createInput(type, className, value, label) {
+        const input = document.createElement("input");
+        input.className = className;
+        input.type = type;
+        input.value = value;
+        input.setAttribute("aria-label", label);
+        return input;
+      }
+
+      function parsePastedPeople(text) {
+        const rows = [];
+        const invalidLines = [];
+        for (const [index, rawLine] of text.split(/\r?\n/).entries()) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          const match = line.match(/^(.+?)(?:\t+|,\s*|\s+)(-?)\s*\$?\s*((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?)$/);
+          if (!match) {
+            invalidLines.push(index + 1);
+            continue;
+          }
+          const name = match[1].trim();
+          const amount = Number(`${match[2]}${match[3].replaceAll(",", "")}`);
+          if (!name || name.length > 70 || !Number.isFinite(amount)) {
+            invalidLines.push(index + 1);
+            continue;
+          }
+          rows.push({
+            id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+            name,
+            amount: Math.round(amount * 100) / 100,
+            currency: "USD"
+          });
+        }
+        return { rows, invalidLines };
+      }
+
+      function showToast(message) {
+        clearTimeout(toastTimeout);
+        elements.toast.textContent = message;
+        elements.toast.classList.add("visible");
+        toastTimeout = setTimeout(() => elements.toast.classList.remove("visible"), 2400);
+      }
+
+      elements.lockButton.addEventListener("click", () => {
+        if (unlocked) {
+          unlocked = false;
+          sessionToken = "";
+          clearTimeout(sessionExpiryTimer);
+          sessionExpiresAt = 0;
+          try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+          render();
+          showToast("Editing locked.");
+        } else if (connectionError) {
+          loadSharedState();
+        } else {
+          elements.password.value = "";
+          elements.dialogError.textContent = "";
+          elements.dialog.showModal();
+          elements.password.focus();
+        }
+      });
+      elements.unlockForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        elements.dialogError.textContent = "";
+        try {
+          const response = await fetch("/api/unlock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: elements.password.value })
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            elements.dialogError.textContent = result.error || "Could not unlock editing.";
+            return;
+          }
+          sessionToken = result.token;
+          scheduleSessionExpiry(Date.now() + result.expiresIn);
+          try {
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: sessionToken, expiresAt: sessionExpiresAt }));
+          } catch {}
+          unlocked = true;
+          elements.dialog.close();
+          let message = "Editing unlocked.";
+          if (revision === 0 && legacySections) {
+            const movedPeople = legacySections.length === 7 && Array.isArray(legacySections[6]?.people) ? legacySections[6].people.length : 0;
+            const imported = await saveSections(legacySections);
+            if (imported.saved) {
+              try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch {}
+              message += " Previous browser records were imported.";
+              if (movedPeople) message += ` ${movedPeople} people from Section 7 moved to ${legacySections[5]?.name || "Section 6"}.`;
+            }
+          }
+          render();
+          showToast(message);
+          if (hasUnsavedChanges && !syncConflict) syncOfflineDraft();
+        } catch {
+          elements.dialogError.textContent = "Could not reach the shared server. Check your connection and try again.";
+        }
+      });
+      elements.syncButton.addEventListener("click", () => {
+        if (syncConflict) downloadOfflineCopy();
+        else syncOfflineDraft();
+      });
+      elements.discardDraftButton.addEventListener("click", useSharedVersion);
+      elements.cancelUnlock.addEventListener("click", () => elements.dialog.close());
+      elements.dialog.addEventListener("click", event => {
+        if (event.target === elements.dialog) elements.dialog.close();
+      });
+      elements.bulkAddButton.addEventListener("click", () => {
+        if (!unlocked) return;
+        elements.bulkPasteInput.value = "";
+        elements.bulkPasteError.textContent = "";
+        elements.bulkPasteDialog.showModal();
+        elements.bulkPasteInput.focus();
+      });
+      elements.cancelBulkPaste.addEventListener("click", () => elements.bulkPasteDialog.close());
+      elements.bulkPasteDialog.addEventListener("click", event => {
+        if (event.target === elements.bulkPasteDialog) elements.bulkPasteDialog.close();
+      });
+      elements.bulkPasteForm.addEventListener("submit", event => {
+        event.preventDefault();
+        elements.bulkPasteError.textContent = "";
+        const { rows, invalidLines } = parsePastedPeople(elements.bulkPasteInput.value);
+        if (invalidLines.length) {
+          elements.bulkPasteError.textContent = `Check line${invalidLines.length === 1 ? "" : "s"} ${invalidLines.join(", ")}. Each line needs a name and dollar amount; names must be 70 characters or fewer.`;
+          return;
+        }
+        if (!rows.length) {
+          elements.bulkPasteError.textContent = "Paste at least one name and dollar amount.";
+          return;
+        }
+        const totalPeople = sections.reduce((total, section) => total + section.people.length, 0);
+        if (totalPeople + rows.length > 10000) {
+          elements.bulkPasteError.textContent = `You can add ${Math.max(0, 10000 - totalPeople)} more people.`;
+          return;
+        }
+        currentSection().people.push(...rows);
+        elements.search.value = "";
+        elements.bulkPasteDialog.close();
+        saveSections(sections, { preserveFocus: true });
+        render();
+        showToast(`Added ${rows.length} ${rows.length === 1 ? "person" : "people"}.`);
+      });
+      elements.addButton.addEventListener("click", () => {
+        if (!unlocked) return;
+        const person = { id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, name: "", amount: 0, currency: "USD" };
+        currentSection().people.push(person);
+        elements.search.value = "";
+        saveSections(sections, { preserveFocus: true });
+        render();
+        const firstInput = elements.table.querySelector("input");
+        if (firstInput) firstInput.focus();
+      });
+      elements.search.addEventListener("input", render);
+      render();
+      loadSharedState();
+      window.addEventListener("online", () => {
+        connectionError = false;
+        if (hasUnsavedChanges) syncOfflineDraft();
+        else loadSharedState();
+      });
+      window.addEventListener("offline", () => {
+        connectionError = true;
+        render();
+      });
+      window.setInterval(refreshSharedState, 15000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden" && hasUnsavedChanges) {
+          clearTimeout(saveDebounce);
+          saveSections(sections, { preserveFocus: true });
+        } else if (document.visibilityState === "visible") {
+          refreshSharedState();
+        }
+      });
+      if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      }
+    })();
+  </script>
+</body>
+</html>

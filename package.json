@@ -1,0 +1,16 @@
+{
+  "name": "morg-money",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"node --env-file-if-exists=.env server.js\" \"vite --host 0.0.0.0\"",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=.env server.js --serve-dist",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "vite": "^7.1.0"
+  }
+}
