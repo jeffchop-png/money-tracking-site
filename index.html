@@ -235,8 +235,8 @@
       <div class="nav-label">Your sections</div>
       <nav class="section-nav" id="sectionNav" aria-label="Money sections"></nav>
       <div class="sidebar-bottom">
-        <div class="save-indicator"><span class="save-dot" aria-hidden="true"></span><span>Shared across this site</span></div>
-        <p class="save-note">Changes are saved on the shared server.</p>
+        <div class="save-indicator"><span class="save-dot" aria-hidden="true"></span><span id="storageLabel">Shared across this site</span></div>
+        <p class="save-note" id="storageNote">Changes are saved on the shared server.</p>
       </div>
     </aside>
     <main class="main">
@@ -303,12 +303,15 @@
       const OFFLINE_STORE_NAME = "snapshots";
       const OFFLINE_RECORD_KEY = "shared-ledger";
       const SESSION_STORAGE_KEY = "morg-money-edit-session";
+      const STATIC_SITE_MODE = location.hostname.endsWith(".github.io");
       const DEFAULT_SECTIONS = Array.from({ length: 6 }, (_, index) => ({ id: `section-${index + 1}`, name: `Section ${String(index + 1).padStart(2, "0")}`, people: [] }));
       const elements = {
         nav: document.getElementById("sectionNav"),
         breadcrumb: document.getElementById("sectionBreadcrumb"),
         title: document.getElementById("pageTitle"),
         accessState: document.getElementById("accessState"),
+        storageLabel: document.getElementById("storageLabel"),
+        storageNote: document.getElementById("storageNote"),
         syncButton: document.getElementById("syncButton"),
         discardDraftButton: document.getElementById("discardDraftButton"),
         lockButton: document.getElementById("lockButton"),
@@ -455,6 +458,28 @@
 
       function saveSections(nextSections = sections, { preserveFocus = false } = {}) {
         if (!unlocked) return Promise.resolve({ saved: false });
+        if (STATIC_SITE_MODE) {
+          const snapshot = JSON.parse(JSON.stringify(nextSections));
+          return queueOfflineWrite({
+            sections: snapshot,
+            revision: 0,
+            baseRevision: 0,
+            pending: false,
+            conflict: false,
+            updatedAt: Date.now()
+          }).then(() => {
+            hasOfflineCopy = true;
+            hasUnsavedChanges = false;
+            pendingBaseRevision = null;
+            connectionError = false;
+            if (preserveFocus) setAccessView();
+            else render();
+            return { saved: true };
+          }).catch(error => {
+            showToast(error.message);
+            return { saved: false };
+          });
+        }
         if (!hasUnsavedChanges) pendingBaseRevision = revision;
         hasUnsavedChanges = true;
         const isImport = nextSections !== sections;
@@ -564,6 +589,22 @@
       }
 
       async function loadSharedState() {
+        if (STATIC_SITE_MODE) {
+          isLoading = true;
+          connectionError = false;
+          render();
+          const cached = await readOfflineSnapshot();
+          if (cached && Array.isArray(cached.sections) && cached.sections.length === 6) {
+            sections = cached.sections;
+          } else {
+            sections = DEFAULT_SECTIONS;
+          }
+          hasOfflineCopy = true;
+          if (!sections.some(section => section.id === activeSectionId)) activeSectionId = sections[0].id;
+          isLoading = false;
+          render();
+          return;
+        }
         isLoading = true;
         connectionError = false;
         restoreEditingSession();
@@ -623,6 +664,7 @@
       }
 
       function syncOfflineDraft() {
+        if (STATIC_SITE_MODE) return Promise.resolve();
         if (syncInProgress || syncConflict || !unlocked || !sessionToken || !hasUnsavedChanges) return saveQueue;
         syncInProgress = true;
         const task = saveQueue.then(async () => {
@@ -727,6 +769,7 @@
       }
 
       async function refreshSharedState() {
+        if (STATIC_SITE_MODE) return;
         if (isLoading || document.visibilityState === "hidden") return;
         const focusedEditor = document.activeElement?.matches?.(".cell-input, .section-title-input");
         if (unlocked && focusedEditor) return;
@@ -766,8 +809,16 @@
       }
 
       function setAccessView() {
-        if (isLoading) {
+        if (STATIC_SITE_MODE) {
+          elements.accessState.innerHTML = isLoading
+            ? "Loading <strong>browser data</strong>"
+            : unlocked ? "Editing <strong>on this device</strong>" : "Editing <strong>locked</strong>";
+          elements.storageLabel.textContent = "Saved in this browser";
+          elements.storageNote.textContent = "This browser's records are not shared with other visitors.";
+        } else if (isLoading) {
           elements.accessState.innerHTML = "Connecting to <strong>shared records</strong>";
+          elements.storageLabel.textContent = "Shared across this site";
+          elements.storageNote.textContent = "Changes are saved on the shared server.";
         } else if (syncConflict) {
           elements.accessState.innerHTML = "<strong>Offline copy needs review</strong>";
         } else if (hasUnsavedChanges) {
@@ -777,12 +828,12 @@
         } else {
           elements.accessState.innerHTML = unlocked ? "Editing <strong>unlocked</strong>" : "Editing <strong>locked</strong>";
         }
-        elements.lockButton.textContent = unlocked ? "Lock editing" : connectionError ? "Retry connection" : "Unlock editing";
+        elements.lockButton.textContent = unlocked ? "Lock editing" : STATIC_SITE_MODE ? "Enable editing" : connectionError ? "Retry connection" : "Unlock editing";
         elements.lockButton.disabled = isLoading;
         elements.lockButton.setAttribute("aria-label", unlocked ? "Lock editing" : connectionError ? "Retry shared server connection" : "Unlock editing with access key");
-        elements.addButton.hidden = isLoading || !unlocked || (connectionError && !hasOfflineCopy);
+        elements.addButton.hidden = isLoading || !unlocked || (!STATIC_SITE_MODE && connectionError && !hasOfflineCopy);
         elements.bulkAddButton.hidden = elements.addButton.hidden;
-        elements.syncButton.hidden = !hasUnsavedChanges;
+        elements.syncButton.hidden = STATIC_SITE_MODE || !hasUnsavedChanges;
         elements.syncButton.textContent = syncConflict ? "Download offline copy" : "Sync now";
         elements.syncButton.disabled = !syncConflict && (!navigator.onLine || syncInProgress || !unlocked);
         elements.discardDraftButton.hidden = !syncConflict;
@@ -1046,6 +1097,10 @@
           try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
           render();
           showToast("Editing locked.");
+        } else if (STATIC_SITE_MODE) {
+          unlocked = true;
+          render();
+          showToast("Editing enabled. Changes are saved in this browser.");
         } else if (connectionError) {
           loadSharedState();
         } else {
@@ -1058,6 +1113,13 @@
       elements.unlockForm.addEventListener("submit", async event => {
         event.preventDefault();
         elements.dialogError.textContent = "";
+        if (STATIC_SITE_MODE) {
+          unlocked = true;
+          elements.dialog.close();
+          render();
+          showToast("Editing enabled. Changes are saved in this browser.");
+          return;
+        }
         try {
           const response = await fetch("/api/unlock", {
             method: "POST",
@@ -1151,6 +1213,7 @@
       render();
       loadSharedState();
       window.addEventListener("online", () => {
+        if (STATIC_SITE_MODE) return;
         connectionError = false;
         if (hasUnsavedChanges) syncOfflineDraft();
         else loadSharedState();
@@ -1169,7 +1232,7 @@
         }
       });
       if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-        navigator.serviceWorker.register("/sw.js").catch(() => {});
+        navigator.serviceWorker.register("sw.js").catch(() => {});
       }
     })();
   </script>

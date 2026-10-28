@@ -1,5 +1,6 @@
 const CACHE_NAME = "morg-money-shell-v1";
-const APP_SHELL = "/";
+const APP_SHELL = new URL("./", self.registration.scope).pathname;
+const API_PREFIX = new URL("api/", self.registration.scope).pathname;
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.add(APP_SHELL)));
@@ -16,7 +17,7 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const requestUrl = new URL(event.request.url);
-  if (event.request.method !== "GET" || requestUrl.origin !== self.location.origin || requestUrl.pathname.startsWith("/api/")) return;
+  if (event.request.method !== "GET" || requestUrl.origin !== self.location.origin || requestUrl.pathname.startsWith(API_PREFIX)) return;
 
   if (event.request.mode === "navigate") {
     event.respondWith((async () => {

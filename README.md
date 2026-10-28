@@ -32,7 +32,11 @@ The included `render.yaml` deploys the built site and API together on Render, wi
 3. Deploy the `morg-money` service from `render.yaml`.
 4. Open the service's **Environment** page to view the generated `MORG_MONEY_KEY`; use it to unlock editing on the deployed site.
 
-Render assigns the public `onrender.com` URL after deployment. A custom domain can be added in the service's **Settings** page. GitHub Pages and `github.dev` cannot host this app by themselves because it requires a running Node API and persistent shared storage.
+Render assigns the public `onrender.com` URL after deployment. A custom domain can be added in the service's **Settings** page. GitHub Pages cannot run the Node API needed for shared records; its browser-local mode is described below.
+
+## GitHub Pages
+
+The GitHub Actions workflow also publishes a static version at `https://jeffchop-png.github.io/money-tracking-site/`. In this mode, balances are saved in the current browser and are not shared with other visitors or devices. For shared records, deploy the Render service above instead.
 
 ## Offline use
 
