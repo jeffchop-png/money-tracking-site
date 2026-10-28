@@ -23,6 +23,17 @@ npm start
 
 Configure `MORG_MONEY_KEY` in the server environment and set `MORG_MONEY_DATA_DIR` to persistent storage. All visitors must reach the same running API and data directory; static hosting alone or multiple uncoordinated server instances will not share changes. Use HTTPS when exposing the site publicly.
 
+## Deploy as a public site
+
+The included `render.yaml` deploys the built site and API together on Render, with a persistent data disk and an automatically generated editing key. This requires a paid Render web service and disk; the service URL is HTTPS and does not include a port.
+
+1. Push this repository to GitHub.
+2. In Render, choose **New** then **Blueprint**, and connect this repository.
+3. Deploy the `morg-money` service from `render.yaml`.
+4. Open the service's **Environment** page to view the generated `MORG_MONEY_KEY`; use it to unlock editing on the deployed site.
+
+Render assigns the public `onrender.com` URL after deployment. A custom domain can be added in the service's **Settings** page. GitHub Pages and `github.dev` cannot host this app by themselves because it requires a running Node API and persistent shared storage.
+
 ## Offline use
 
 After the page has been opened online once, the service worker caches the app shell and IndexedDB keeps a local copy of the ledger. An already-authorized device can keep editing while offline; edits are saved on that device and sync when the API is reachable again. Edit authorization expires after 12 hours, so unlock while online before relying on offline editing. If another person changed the ledger while a device was offline, its draft is kept locally and can be downloaded; it is not silently written over the shared version.
